@@ -44,7 +44,7 @@ subtask(
     if (config.only.length && !config.only.some(m => fullName.match(m))) return;
     if (config.except.length && config.except.some(m => fullName.match(m))) return;
 
-    let { abi, sourceName, contractName } = await hre.artifacts.readArtifact(fullName);
+    let { abi, sourceName, contractName, bytecode } = await hre.artifacts.readArtifact(fullName);
 
     if (!abi.length) return;
 
@@ -59,7 +59,7 @@ subtask(
       config.rename(sourceName, contractName)
     ) + '.json';
 
-    outputData.push({ abi, destination });
+    outputData.push({ contract: {abi, bytecode}, destination });
   }));
 
   outputData.reduce(function (acc, { destination }) {
@@ -75,8 +75,8 @@ subtask(
     await hre.run('clear-abi-group', { path: config.path });
   }
 
-  await Promise.all(outputData.map(async function ({ abi, destination }) {
+  await Promise.all(outputData.map(async function ({ contract, destination }) {
     await fs.promises.mkdir(path.dirname(destination), { recursive: true });
-    await fs.promises.writeFile(destination, `${JSON.stringify(abi, null, config.spacing)}\n`, { flag: 'w' });
+    await fs.promises.writeFile(destination, `${JSON.stringify(contract, null, config.spacing)}\n`, { flag: 'w' });
   }));
 });
